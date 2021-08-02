@@ -5,10 +5,13 @@ import os
 from pyrogram import idle
 from bot import app
 from sys import executable
+from datetime import datetime
+import pytz
+import time
 
 from telegram import ParseMode
 from telegram.ext import CommandHandler
-from bot import bot, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS
+from bot import bot, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, GROUP_ID
 from bot.helper.ext_utils import fs_utils
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import *
@@ -16,10 +19,13 @@ from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_tim
 from .helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper import button_build
 from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch, shell, eval, torrent_search, delete, speedtest, count, config, updates
+from telegram.error import BadRequest, Unauthorized
+now=datetime.now(pytz.timezone('Asia/Kolkata'))
 
 
 def stats(update, context):
     currentTime = get_readable_time(time.time() - botStartTime)
+    current = now.strftime('%Y/%m/%d %I:%M:%S %p')
     total, used, free = shutil.disk_usage('.')
     total = get_readable_file_size(total)
     used = get_readable_file_size(used)
@@ -29,15 +35,17 @@ def stats(update, context):
     cpuUsage = psutil.cpu_percent(interval=0.5)
     memory = psutil.virtual_memory().percent
     disk = psutil.disk_usage('/').percent
-    stats = f'<b>Bot Uptime:</b> {currentTime}\n' \
-            f'<b>Total Disk Space:</b> {total}\n' \
-            f'<b>Used:</b> {used}  ' \
-            f'<b>Free:</b> {free}\n\n' \
-            f'📊Data Usage📊\n<b>Upload:</b> {sent}\n' \
-            f'<b>Download:</b> {recv}\n\n' \
-            f'<b>CPU:</b> {cpuUsage}%\n' \
-            f'<b>RAM:</b> {memory}%\n' \
-            f'<b>DISK:</b> {disk}%'
+    stats = f'<b>💠 BOT STATISTICS</b>\n\n' \
+            f'<b>Bot Uptime : {currentTime}</b>\n\n' \
+            f'<b>Total Disk Space : {total}</b>\n' \
+            f'<b>Total Used Space : {used}</b>\n' \
+            f'<b>Total Free Space : {free}</b>\n\n' \
+            f'<b>Total Upload : {sent}</b>\n' \
+            f'<b>Total Download : {recv}</b>\n\n' \
+            f'<b>CPU : {cpuUsage}%</b>\n' \
+            f'<b>RAM : {memory}%</b>\n' \
+            f'<b>DISK : {disk}%</b>\n\n' \
+            f'<b>💙 @ToukaCloud</b>'
     sendMessage(stats, context.bot, update)
 
 
@@ -47,18 +55,18 @@ This bot can mirror all your links to Google Drive!
 Type /{BotCommands.HelpCommand} to get a list of available commands
 '''
     buttons = button_build.ButtonMaker()
-    buttons.buildbutton("Repo", "https://github.com/breakdowns/slam-aria-mirror-bot")
-    buttons.buildbutton("Support Group", "https://t.me/SlamMirrorSupport")
+    buttons.buildbutton("Join Channel", "https://telegram.dog/touka19")
+    buttons.buildbutton("Support Group", "https://telegram.dog/toukachat")
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
     LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
     uptime = get_readable_time((time.time() - botStartTime))
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         if update.message.chat.type == "private" :
-            sendMessage(f"Hey I'm Alive 🙂\nSince: <code>{uptime}</code>", context.bot, update)
+            sendMessage(f"Hey I'm Alive 💙\nSince: <code>{uptime}</code>", context.bot, update)
         else :
             sendMarkup(start_string, context.bot, update, reply_markup)
     else :
-        sendMarkup(f"Oops! not a Authorized user.\nPlease deploy your own <b>slam-aria-mirror-bot</b>.", context.bot, update, reply_markup)
+        sendMarkup(f"Oops! Unauthorized user", context.bot, update, reply_markup)
 
 
 def restart(update, context):
@@ -201,7 +209,19 @@ botcmds = [
 
 def main():
     fs_utils.start_cleanup()
+
     # Check if the bot is restarting
+
+    if GROUP_ID is not None and isinstance(GROUP_ID, str):
+        try:
+            dispatcher.bot.sendMessage(f"{GROUP_ID}", "The bot is booted and is ready to use. @Empathiz")
+
+        except Unauthorized:
+            LOGGER.warning("Bot isnt able to send message to support_chat, go and check!")
+
+        except BadRequest as e:
+            LOGGER.warning(e.message)
+
     if os.path.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
