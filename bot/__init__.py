@@ -115,6 +115,7 @@ try:
     AUTO_DELETE_MESSAGE_DURATION = int(getConfig('AUTO_DELETE_MESSAGE_DURATION'))
     TELEGRAM_API = getConfig('TELEGRAM_API')
     TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
+    GROUP_ID = os.environ.get('GROUP_ID', None)
     UPSTREAM_REPO = getConfig('UPSTREAM_REPO')
     UPSTREAM_BRANCH = getConfig('UPSTREAM_BRANCH')
 except KeyError as e:
